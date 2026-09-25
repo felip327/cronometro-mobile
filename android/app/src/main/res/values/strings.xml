@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cronometro De Estudos</string>
+    <string name="title_activity_main">Cronometro De Estudos</string>
+    <string name="package_name">br.com.cronometrodeestudos</string>
+    <string name="custom_url_scheme">br.com.cronometrodeestudos</string>
+</resources>

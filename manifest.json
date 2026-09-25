@@ -1,0 +1,13 @@
+{
+  "name": "Foco - Cronômetro de Estudos",
+  "short_name": "Foco",
+  "description": "Cronômetro Pomodoro com histórico de sessões salvo no aparelho.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#182620",
+  "theme_color": "#182620",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

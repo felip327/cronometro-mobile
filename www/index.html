@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
+  <meta name="theme-color" content="#182620" />
+  <title>Foco • Cronômetro de Estudos</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+
+  <!-- Fontes (baixadas/cacheadas pelo navegador; app funciona sem elas também) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind já compilado localmente -> funciona 100% offline -->
+  <link rel="stylesheet" href="css/tailwind.css" />
+</head>
+<body class="bg-board font-body text-chalk min-h-screen overflow-x-hidden">
+
+  <div class="mx-auto flex min-h-screen w-full max-w-md flex-col bg-board bg-grid bg-grid">
+
+    <!-- ===================== HEADER ===================== -->
+    <header class="flex items-center justify-between px-5 pt-6 pb-2">
+      <div>
+        <p class="font-display text-xl font-semibold tracking-tight text-chalk">Foco</p>
+        <p class="text-xs text-chalk-dim">cronômetro de estudos</p>
+      </div>
+      <div id="cycle-indicator" class="flex items-center gap-1.5" aria-label="Progresso do ciclo">
+        <!-- pontos de ciclo inseridos via JS -->
+      </div>
+    </header>
+
+    <!-- ===================== TELAS (tabs) ===================== -->
+    <main class="flex-1 px-5 pb-4">
+
+      <!-- ---- TIMER ---- -->
+      <section id="screen-timer" data-screen class="flex flex-col items-center pt-4">
+
+        <span id="mode-label" class="mb-6 inline-flex items-center gap-2 rounded-full border border-board-lighter bg-board-light px-4 py-1.5 text-sm font-medium text-tomato">
+          <span id="mode-dot" class="h-2 w-2 rounded-full bg-tomato"></span>
+          <span id="mode-text">Sessão de Foco</span>
+        </span>
+
+        <!-- Anel de progresso (elemento de assinatura visual) -->
+        <div class="relative flex items-center justify-center">
+          <svg viewBox="0 0 280 280" class="h-72 w-72 -rotate-90">
+            <!-- marcações tipo mostrador de cronômetro -->
+            <g id="tick-marks" stroke="rgba(244,241,230,0.15)" stroke-width="2"></g>
+            <circle cx="140" cy="140" r="120" fill="none" stroke="rgba(244,241,230,0.08)" stroke-width="10" />
+            <circle
+              id="progress-ring"
+              cx="140" cy="140" r="120" fill="none"
+              stroke="#E8583B" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="753.98"
+              stroke-dashoffset="0"
+              style="transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease;"
+            />
+          </svg>
+          <div class="absolute flex flex-col items-center">
+            <span id="time-display" class="font-mono text-5xl font-bold tabular-nums text-chalk">25:00</span>
+            <span id="session-count" class="mt-1 text-xs text-chalk-dim">sessão 1</span>
+          </div>
+        </div>
+
+        <!-- Controles -->
+        <div class="mt-10 flex w-full items-center justify-center gap-4">
+          <button id="btn-reset" class="btn-secondary" aria-label="Reiniciar sessão">
+            Reiniciar
+          </button>
+          <button id="btn-toggle" class="btn-primary min-w-[9.5rem]" aria-label="Iniciar ou pausar">
+            Começar
+          </button>
+        </div>
+        <button id="btn-skip" class="mt-4 text-sm text-chalk-dim underline decoration-dotted underline-offset-4 active:text-chalk">
+          Pular para a próxima etapa
+        </button>
+
+        <!-- Resumo rápido do dia -->
+        <div class="mt-8 grid w-full grid-cols-2 gap-3">
+          <div class="card text-center">
+            <p id="stat-today" class="font-mono text-2xl font-bold text-chalk">0</p>
+            <p class="text-xs text-chalk-dim">min focados hoje</p>
+          </div>
+          <div class="card text-center">
+            <p id="stat-sessions" class="font-mono text-2xl font-bold text-chalk">0</p>
+            <p class="text-xs text-chalk-dim">sessões concluídas</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- HISTÓRICO ---- -->
+      <section id="screen-history" data-screen class="hidden flex-col pt-4">
+        <h2 class="font-display text-lg font-semibold text-chalk">Histórico</h2>
+        <p class="mb-4 text-sm text-chalk-dim">Sessões sincronizadas com o Supabase (Nuvem ☁️)</p>
+
+        <div class="mb-4 grid grid-cols-2 gap-3">
+          <div class="card text-center">
+            <p id="hist-total-minutes" class="font-mono text-2xl font-bold text-chalk">0</p>
+            <p class="text-xs text-chalk-dim">min de foco no total</p>
+          </div>
+          <div class="card text-center">
+            <p id="hist-total-sessions" class="font-mono text-2xl font-bold text-chalk">0</p>
+            <p class="text-xs text-chalk-dim">pomodoros concluídos</p>
+          </div>
+        </div>
+
+        <div id="history-list" class="flex flex-col gap-5">
+          <!-- grupos por dia inseridos via JS -->
+        </div>
+
+        <div id="history-empty" class="hidden flex-col items-center gap-2 py-12 text-center">
+          <p class="text-chalk">Nenhuma sessão ainda</p>
+          <p class="text-sm text-chalk-dim">Complete um foco na aba Timer para começar seu histórico.</p>
+        </div>
+
+        <button id="btn-clear-history" class="mt-6 mb-4 w-full rounded-xl border border-tomato-dim/50 py-3 text-sm font-medium text-tomato active:bg-tomato/10">
+          Limpar histórico
+        </button>
+      </section>
+
+      <!-- ---- CONFIGURAÇÕES ---- -->
+      <section id="screen-settings" data-screen class="hidden flex-col pt-4 pb-6">
+        <h2 class="font-display text-lg font-semibold text-chalk">Configurações</h2>
+        <p class="mb-4 text-sm text-chalk-dim">Ajuste os tempos de cada etapa.</p>
+
+        <form id="settings-form" class="flex flex-col gap-4">
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Foco (minutos)</span>
+            <input type="number" min="1" max="180" id="set-focus" class="w-16 rounded-lg bg-board border border-board-lighter px-2 py-1 text-right font-mono text-chalk" />
+          </label>
+
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Pausa curta (minutos)</span>
+            <input type="number" min="1" max="60" id="set-short" class="w-16 rounded-lg bg-board border border-board-lighter px-2 py-1 text-right font-mono text-chalk" />
+          </label>
+
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Pausa longa (minutos)</span>
+            <input type="number" min="1" max="120" id="set-long" class="w-16 rounded-lg bg-board border border-board-lighter px-2 py-1 text-right font-mono text-chalk" />
+          </label>
+
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Focos até pausa longa</span>
+            <input type="number" min="1" max="12" id="set-cycles" class="w-16 rounded-lg bg-board border border-board-lighter px-2 py-1 text-right font-mono text-chalk" />
+          </label>
+
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Som ao terminar</span>
+            <input type="checkbox" id="set-sound" class="h-5 w-5 accent-tomato" />
+          </label>
+
+          <label class="card flex items-center justify-between">
+            <span class="text-sm text-chalk">Vibrar ao terminar</span>
+            <input type="checkbox" id="set-vibration" class="h-5 w-5 accent-tomato" />
+          </label>
+        </form>
+
+        <p id="settings-saved" class="mt-3 hidden text-center text-xs text-breeze">Configurações salvas ✓</p>
+      </section>
+
+    </main>
+
+    <!-- ===================== TAB BAR ===================== -->
+    <nav class="sticky bottom-0 flex border-t border-board-lighter bg-board/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+      <button class="tab-btn active" data-tab="timer" aria-label="Cronômetro">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg>
+        <span class="text-[11px]">Timer</span>
+      </button>
+      <button class="tab-btn" data-tab="history" aria-label="Histórico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        <span class="text-[11px]">Histórico</span>
+      </button>
+      <button class="tab-btn" data-tab="settings" aria-label="Configurações">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="text-[11px]">Ajustes</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

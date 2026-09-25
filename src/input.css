@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: #182620;
+  }
+}
+
+@layer components {
+  .tab-btn {
+    @apply flex flex-1 flex-col items-center justify-center gap-1 py-3 text-chalk-dim transition-colors;
+  }
+  .tab-btn.active {
+    @apply text-chalk;
+  }
+  .btn-primary {
+    @apply rounded-xl bg-tomato px-8 py-4 font-body font-semibold text-chalk shadow-card active:translate-y-1 active:shadow-none transition-all;
+  }
+  .btn-secondary {
+    @apply rounded-xl border-2 border-board-lighter px-8 py-4 font-body font-semibold text-chalk-muted active:bg-board-light transition-all;
+  }
+  .card {
+    @apply rounded-2xl bg-board-light border border-board-lighter/60 p-4;
+  }
+}
+
+/* Focus visibility for keyboard users */
+:focus-visible {
+  outline: 2px solid #E3B23C;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
